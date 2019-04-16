@@ -27,6 +27,7 @@
     canvas.height = innerHeight;
     var i = null;
     var lastTime = 0;
+    var points = 0;
 
     var player = {
         width: 150,
