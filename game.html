@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<head>
-    <style>
+    <head>
+        <style>
         #canvas {
             width: 100%;
             height: 100%;
@@ -9,199 +9,191 @@
             background-size: contain;
             position: absolute;
         }
-    </style>
-</head>
+        </style>
+    </head>
 <body style="margin:0px;">
     <canvas id="canvas"></canvas>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            c = canvas.getContext('2d');
+        var innerWidth = screen.width,
+            innerHeight = screen.height - 10;
+        canvas.width = innerWidth;
+        canvas.height = innerHeight;
+        var i = null;
+        var lastTime = 0;
+        var points = 0;
+        
+        var player = {
+            width: 150,
+            height: 200,
+            x: 0,
+            y: 0,
+            img: new Image(),
+            life: true,
+            draw: function () {
+                if (this.x <= 0) {
+                    this.x = 0;
+                } else if (this.x >= (innerWidth - this.width)) {
+                    this.x = (innerWidth - this.width);
+                }
+                if (this.y <= 0) {
+                    this.y = 0;
+                } else if (this.y >= (innerHeight - this.height)) {
+                    this.y = (innerHeight - this.height);
+                }
+                this.img.src = "http://www.coloring4fun.com/wp-content/uploads/2013/02/cars_53.jpg";
+                c.drawImage(this.img, this.x, this.y, this.width, this.height);
+             }
+        }
+        var enemyArray = [],
+            enemyIndex = 0;
+        function enemy(x, y, dx, enemy_img, enemy_width, enemy_height, rotation) {
+            this.x = x;
+            this.y = y;
+            this.dx = dx;
+            this.img = enemy_img;
+            this.width = enemy_width;
+            this.height = enemy_height;
+            this.rotation = rotation;
+            enemyIndex++;
+            enemyArray[enemyIndex] = this;
+            this.id = enemyIndex;
+            this.meet = function () {
+                enemyArray.forEach(function (enemy) {
+                        if (player.x + player.width >= enemy.x && player.x + player.width <= enemy.x + enemy.width && player.y <= enemy.y + enemy.height && player.y + player.height / 2 >= enemy.y) {
+                            player.life = false;
+                        }
+                    });
+                enemyArray.forEach(function (enemy) {
+                    fireArray.forEach(function (fire) {
+                        if (fire.x + fire.width >= enemy.x && fire.x + fire.width <= enemy.x + enemy.width && fire.y <= enemy.y + enemy.height && fire.y + fire.height / 2 >= enemy.y) {
+                            enemy.delete();
+                            fire.delete();
+                            points++;
+                        }
+                    });
+                });
+            }
+            this.update = function () {
+                this.x -= this.dx;
+                this.meet();
+                if (this.x < 0 - this.width) {
+                    this.delete();
+                }
+                if (this.rotation >= 0.5) {
+                    this.y = 30;
+                }
+                this.draw();
+            }
+            this.delete = function () {
+                delete enemyArray[this.id];
+            }
+            this.draw = function () {
+                this.img.src = "https://cdn.xl.thumbs.canstockphoto.se/v%C3%A4gsp%C3%A4rr-clipart_csp19982319.jpg";
+                c.drawImage(this.img, this.x, this.y, this.width, this.height);
+            }
+        }
+        
+        function create_enemy() {
+            var x = 1300;
+            var y = 480;
+            var dx = 2.4;
+            var img = new Image();
+            var width = 160;
+            var height = 300;
+            var rotation = Math.random();
+            new enemy(x, y, dx, img, width, height, rotation);
+        }
+        var fireArray = [],
+            fireIndex = 0;
+        function fire(x, y, dx, fire_img, fire_width, fire_height, rotation) {
+            this.x = x;
+            this.y = y;
+            this.dx = dx;
+            this.img = fire_img;
+            this.width = fire_width;
+            this.height = fire_height;
+            this.rotation = rotation;
+            fireIndex++;
+            fireArray[fireIndex] = this;
+            this.id = fireIndex;
+            this.meet = function () {
+            }
+            this.update = function () {
+                this.x += this.dx;
+                if (this.x + this.width >= screen.width) {
+                    this.delete();
+                }
+                this.meet();
+                this.draw();
+            }
+            this.delete = function () {
+                delete fireArray[this.id];
+            }
+            this.draw = function () {
+                this.img.src = "https://memegene.net/sites/default/files/wallpaper/tornado-clipart/108284/tornado-clipart-transparent-background-108284-6891562.png";
+                c.drawImage(this.img, this.x, this.y, this.width, this.height);
+            }
+        }
+       
+        function create_fire() {
+            var x = player.x + player.width;
+            var y = player.y;
+            var dx = 5.4;
+            var img = new Image();
+            var width = 160;
+            var height = 200;
+            var rotation = Math.random();
+            new fire(x, y, dx, img, width, height, rotation);
+        }
+        
+        function onKey(e) {
+            switch (e.keyCode) {
+                case 39: player.x += 10;
+                    break;
+                case 37: player.x += -10;
+                    break;
+                case 40: player.y += 20;
+                    break;
+                case 38: player.y += -20;
+                    break;
+                case 32: create_fire();
+                    break;
+                }
+            } document.onkeydown = onKey;
+        
+        function animation(currentTime) {
+            requestAnimationFrame(animation);
+            i -= 2;
+            document.getElementById("canvas").style.backgroundPosition = i + 'px';
+            c.clearRect(0, 0, canvas.width, canvas.height);
+            if (currentTime >= lastTime + 3500) {
+                create_enemy();
+                lastTime = currentTime;
+            }
+            if (player.life) {
+                player.draw();
+            }
+            enemyArray.forEach(function (enemy) {
+                enemy.update();
+            });
+            fireArray.forEach(function (fire) {
+                fire.update();
+            });
+            c.font = '35px arial';
+            c.fillStyle = '#fff';
+            c.fillText('POINTS: ' + points, 0, 40);
+            if(!player.life){
+                c.font = '215px balck';
+                c.fillStyle = '#00000';
+                c.fillText(`YOU ARE DIE`, innerWidth / 50, innerHeight /2 );
+            }
 
+        }
+        animation();
+</script>
 </body>
 </html>
 
-<script>
 
-    var canvas = document.getElementById('canvas'),
-        c = canvas.getContext('2d');
-    var innerWidth = screen.width,
-        innerHeight = screen.height - 10;
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    var i = null;
-    var lastTime = 0;
-    var points = 0;
-
-    var player = {
-        width: 150,
-        height: 200,
-        x: 0,
-        y: 0,
-        img: new Image(),
-        life: true,
-        draw: function () {
-
-            if (this.x <= 0) {
-                this.x = 0;
-            } else if (this.x >= (innerWidth - this.width)) {
-                this.x = (innerWidth - this.width);
-            }
-
-            if (this.y <= 0) {
-                this.y = 0;
-            } else if (this.y >= (innerHeight - this.height)) {
-                this.y = (innerHeight - this.height);
-            }
-        this.img.src = "http://www.coloring4fun.com/wp-content/uploads/2013/02/cars_53.jpg";
-
-            c.drawImage(this.img, this.x, this.y, this.width, this.height);
-
-        }
-    }
-
-
-    var enemyArray = [],
-        enemyIndex = 0,
-        enemy_timer = 3500
-    function enemy(x, y, dx, enemy_img, enemy_width, enemy_height, rotation) {
-        this.x = x;
-        this.y = y;
-        this.dx = dx;
-        this.img = enemy_img;
-        this.width = enemy_width;
-        this.height = enemy_height;
-        this.rotation = rotation;
-        enemyIndex++;
-        enemyArray[enemyIndex] = this;
-        this.id = enemyIndex;
-        this.meet = function () {
-            if (player.x >= enemy.x && player.x + player.width <= enemy.x + enemy.width &&
-                player.y <= enemy.y + enemy.height &&player.y + player.height > enemy.y) {
-                player.life = false;
-            }
-            enemyArray.forEach(function (enemy) {
-                fireArray.forEach(function (fire) {
-                if (fire.x + fire.width >= enemy.x && fire.x + fire.width <= enemy.x + enemy.width && fire.y <= enemy.y + enemy.height && fire.y + fire.height / 2 >= enemy.y) {
-                    enemy.delete();
-                    fire.delete();
-                    score++;
-                }
-            });
-            });
-        }
-        this.update = function () {
-            this.x -= this.dx;
-            this.meet();
-            if (this.x < 0 - this.width) {
-                this.delete();
-            }
-            if (this.rotation >= 0.5) {
-                this.y = 30;
-            }
-            this.draw();
-        }
-        this.delete = function () {
-            delete enemyArray[this.id];
-        }
-        this.draw = function () {
-            this.img.src = "https://cdn.xl.thumbs.canstockphoto.se/v%C3%A4gsp%C3%A4rr-clipart_csp19982319.jpg";
-            c.drawImage(this.img, this.x, this.y, this.width, this.height);
-        }
-    }
-    function create_enemy() {
-        var x = 1300;
-        var y = 480;
-        var dx = 2.4;
-        var img = new Image();
-        var width = 160;
-        var height = 300;
-        var rotation = Math.random();
-
-        new enemy(x, y, dx, img, width, height, rotation);
-    }
-    var fireArray = [],
-        fireIndex = 0;
-    function fire(x, y, dx, fire_img, fire_width, fire_height, rotation) {
-        this.x = x;
-        this.y = y;
-        this.dx = dx;
-        this.img = fire_img;
-        this.width = fire_width;
-        this.height = fire_height;
-        this.rotation = rotation;
-        fireIndex++;
-        fireArray[fireIndex] = this;
-        this.id = fireIndex;
-        this.meet = function () {
-
-        }
-        this.update = function () {
-            this.x += this.dx;
-            if (this.x + this.width >= screen.width) {
-                this.delete();
-            }
-            this.meet();
-
-            this.draw();
-        }
-        this.delete = function () {
-            delete fireArray[this.id];
-        }
-        this.draw = function () {
-            this.img.src = "https://memegene.net/sites/default/files/wallpaper/tornado-clipart/108284/tornado-clipart-transparent-background-108284-6891562.png";
-            c.drawImage(this.img, this.x, this.y, this.width, this.height);
-        }
-    }
-    function create_fire() {
-        var x = player.x + player.width;
-        var y = player.y;
-        var dx = 5.4;
-        var img = new Image();
-        var width = 160;
-        var height = 200;
-        var rotation = Math.random();
-
-        new fire(x, y, dx, img, width, height, rotation);
-    }
-
-    function onKey(e) {
-        switch (e.keyCode) {
-            case 39: player.x += 10;
-                break;
-            case 37: player.x += -10;
-                break;
-            case 40: player.y += 20;
-                break;
-            case 38: player.y += -20;
-                break;
-            case 32: create_fire();
-
-                break;
-        }
-    } document.onkeydown = onKey;
-
-    function animation(currentTime) {
-        requestAnimationFrame(animation);
-        i -= 2;
-        document.getElementById("canvas").style.backgroundPosition = i + 'px';
-        c.clearRect(0, 0, canvas.width, canvas.height);
-        if (currentTime >= lastTime + enemy_timer) {
-            create_enemy();
-            lastTime = currentTime;
-        }
-        if (player.life) {
-            player.draw();
-        }
-        enemyArray.forEach(function (enemy) {
-            enemy.update();
-
-        });
-        fireArray.forEach(function (fire) {
-            fire.update();
-
-        });
-
-
-    }
-    animation();
-    /*
-    */
-
-</script>
