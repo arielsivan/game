@@ -104,6 +104,16 @@
             var height = 300;
             var rotation = Math.random();
             new enemy(x, y, dx, img, width, height, rotation);
+        }     
+        function create_bad() {
+            var x = 2000;
+            var y = 480;
+            var dx = 5;
+            var img = new Image();
+            var width = 80;
+            var height = 150;
+            var rotation = Math.random();
+            new enemy(x, y, dx, img, width, height, rotation);
         }
         var fireArray = [],
             fireIndex = 0;
@@ -170,6 +180,7 @@
             c.clearRect(0, 0, canvas.width, canvas.height);
             if (currentTime >= lastTime + 3500) {
                 create_enemy();
+                create_bad();
                 lastTime = currentTime;
             }
             if (player.life) {
@@ -192,8 +203,8 @@
 
         }
         animation();
+        
 </script>
 </body>
 </html>
-
 
